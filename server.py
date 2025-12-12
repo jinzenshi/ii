@@ -12,8 +12,11 @@ if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
-async def root():
-    """健康检查端点"""
+def root():
+    """主页 - 返回 HTML 界面"""
+    if os.path.exists(os.path.join("static", "index.html")):
+        path = os.path.join("static", "index.html")
+        return FileResponse(path)
     return {
         "status": "ok",
         "message": "智能填表服务正在运行",
@@ -22,7 +25,7 @@ async def root():
 
 @app.get("/index")
 def index():
-    """主页 - 如果静态文件存在"""
+    """主页 - 返回 HTML 界面（备用）"""
     if os.path.exists(os.path.join("static", "index.html")):
         path = os.path.join("static", "index.html")
         return FileResponse(path)
