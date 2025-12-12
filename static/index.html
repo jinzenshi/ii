@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>智能填表助手</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;max-width:720px;margin:24px auto;padding:0 16px}
+    h1{font-size:22px}
+    label{display:block;margin:12px 0 6px}
+    input,textarea,button{width:100%}
+    textarea{min-height:160px}
+    .row{display:flex;gap:12px}
+    .row>div{flex:1}
+    .note{color:#666;font-size:13px;margin-top:4px}
+    .actions{margin-top:16px}
+  </style>
+  <script>
+    async function submitForm(e){
+      e.preventDefault();
+      const docx = document.getElementById('docx').files[0];
+      const photo = document.getElementById('photo').files[0] || null;
+      const userInfo = document.getElementById('user_info').value.trim();
+      if(!docx){ alert('请上传 Word 模板'); return; }
+      if(!userInfo){ alert('请填写个人资料文本'); return; }
+      const fd = new FormData();
+      fd.append('docx', docx);
+      if(photo) fd.append('photo', photo);
+      fd.append('user_info_text', userInfo);
+      const btn = document.getElementById('submit');
+      btn.disabled = true; btn.textContent = '处理中...';
+      try{
+        const res = await fetch('/process', { method:'POST', body: fd });
+        if(!res.ok){ throw new Error('处理失败'); }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = '报名表_已填写.docx';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      }catch(err){
+        alert('出错：' + err.message);
+      }finally{
+        btn.disabled = false; btn.textContent = '生成 Word 文件';
+      }
+    }
+    window.addEventListener('DOMContentLoaded',()=>{
+      document.getElementById('form').addEventListener('submit', submitForm);
+    });
+  </script>
+  </head>
+<body>
+  <h1>智能填表助手</h1>
+  <form id="form">
+    <label>上传 Word 模板（.docx）</label>
+    <input id="docx" type="file" accept=".docx" required>
+    <div class="note">表格中的空单元格将自动预置为 {1}, {2}, ...</div>
+    <label>上传证件照（可选）</label>
+    <input id="photo" type="file" accept="image/*">
+    <div class="note">若表格中含“照片/相片/证件照”等字样，将在对应单元格插入照片</div>
+    <label>个人资料文本</label>
+    <textarea id="user_info" placeholder="在此粘贴个人信息，如：姓名、联系方式、教育经历等" required></textarea>
+    <div class="actions">
+      <button id="submit" type="submit">生成 Word 文件</button>
+    </div>
+    <div class="note">服务端需已配置环境变量 ARK_API_KEY；如需更换模型可设置 MODEL_ENDPOINT。</div>
+  </form>
+</body>
+</html>
+
