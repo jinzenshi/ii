@@ -20,13 +20,19 @@
       e.preventDefault();
       const docx = document.getElementById('docx').files[0];
       const photo = document.getElementById('photo').files[0] || null;
-      const userInfo = document.getElementById('user_info').value.trim();
+      const userInfoFile = document.getElementById('user_info').files[0];
+
       if(!docx){ alert('请上传 Word 模板'); return; }
-      if(!userInfo){ alert('请填写个人资料文本'); return; }
+      if(!userInfoFile){ alert('请上传个人资料文件'); return; }
+
+      // 读取个人信息文件内容
+      const userInfoText = await userInfoFile.text();
+
       const fd = new FormData();
       fd.append('docx', docx);
       if(photo) fd.append('photo', photo);
-      fd.append('user_info_text', userInfo);
+      fd.append('user_info_text', userInfoText);
+
       const btn = document.getElementById('submit');
       btn.disabled = true; btn.textContent = '处理中...';
       try{
@@ -57,9 +63,10 @@
     <div class="note">表格中的空单元格将自动预置为 {1}, {2}, ...</div>
     <label>上传证件照（可选）</label>
     <input id="photo" type="file" accept="image/*">
-    <div class="note">若表格中含“照片/相片/证件照”等字样，将在对应单元格插入照片</div>
-    <label>个人资料文本</label>
-    <textarea id="user_info" placeholder="在此粘贴个人信息，如：姓名、联系方式、教育经历等" required></textarea>
+    <div class="note">若表格中含"照片/相片/证件照"等字样，将在对应单元格插入照片</div>
+    <label>上传个人资料文件（.txt）</label>
+    <input id="user_info" type="file" accept=".txt" required>
+    <div class="note">请上传包含个人信息的txt文件，如姓名、联系方式、教育经历等</div>
     <div class="actions">
       <button id="submit" type="submit">生成 Word 文件</button>
     </div>
